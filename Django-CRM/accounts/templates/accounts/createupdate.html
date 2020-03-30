@@ -1,0 +1,16 @@
+{% extends 'accounts/main.html' %}
+ {% block content %}
+
+   <div class="mx-auto" style="margin-top: 50px">
+         <form action= "" method= "POST">
+             {% csrf_token %}
+             {{form.management_form}}
+            {% for f in form %}
+               {{f}}
+               <hr>
+            {% endfor %}
+
+            <input style="margin-left: 20px" class="btn btn-md  btn-outline-info" type= "submit" name = "Submit">
+        </form>
+   </div>
+{% endblock content %}
