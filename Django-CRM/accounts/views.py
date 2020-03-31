@@ -37,16 +37,23 @@ def registration(request):
     # if request.user.is_authenticated:
     #     return redirect('home')
     # else:
+    form = RegistrationForm()
     if request.method =="POST":
             form = RegistrationForm(request.POST)
             if form.is_valid():
-                form.save()
-                user = form.cleaned_data.get('username')
+                user = form.save()
+                username = form.cleaned_data.get('username')
 
                 group = Group.objects.get(name='customer')
                 user.groups.add(group)
 
-                messages.success(request,'Account was create for '+user)
+                Customer.objects.create(
+                    user = user,
+                    name=user.username,
+                    email=user.email
+                )
+
+                messages.success(request,'Account was create for '+username)
                 return redirect('login')
     form = RegistrationForm()
     context = {'form':form}
@@ -57,12 +64,18 @@ def logoutpage(request):
     return redirect('login')
 
 def user(request):
-    context = {}
+    orders = request.user.customer.order_set.all()
+    total_order = orders.count()
+    total_pending = orders.filter(status = 'Pending').count()
+    delivered = orders.filter(status = 'Delivered').count()
+
+    context= {'orders': orders, 'total_order': total_order,
+    'total_pending': total_pending, 'delivered': delivered}
     return render(request, 'accounts/user.html', context)
 
 
 @admin_only
-# @allowed_users(allowed_roles =['admin'])
+@allowed_users(allowed_roles =['admin'])
 def home(request):
     orders = Order.objects.all()
     customers = Customer.objects.all()
@@ -76,11 +89,13 @@ def home(request):
 
     return render(request, 'accounts/dashboard.html', context)
 
+@allowed_users(allowed_roles =['admin'])
 @login_required(login_url='login')
 def product(request): 
     product = Product.objects.all()
     return render(request, 'accounts/product.html', {'product':product})
 
+@allowed_users(allowed_roles =['admin'])
 @login_required(login_url='login')
 def customer(request, pk_test): 
     customer = Customer.objects.get(id = pk_test)
